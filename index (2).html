@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,
+maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>J&E Expenses</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0;
+}
+:root {
+--bg: #f4f3ee; --surface: #ffffff; --surface2: #f4f3ee;
+--text: #1a1a18; --text2: #5f5e5a; --text3: #b4b2a9;
+--info-bg: #e6f1fb; --info-text: #185fa5; --info-border:
+rgba(24,95,165,0.3);
+--warn-bg: #faeeda; --warn-text: #854f0b;
+--success-bg: #eaf3de; --success-text: #3b6d11;
+--danger-bg: #fcebeb; --danger-text: #a32d2d;
+--border: rgba(0,0,0,0.11); --border2: rgba(0,0,0,0.2);
+--radius: 12px; --radius-sm: 8px;
+--font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+:root {
+--bg: #111110; --surface: #1e1e1c; --surface2: #2c2c2a;
+--text: #f1efe8; --text2: #b4b2a9; --text3: #5f5e5a;
+--info-bg: #042c53; --info-text: #85b7eb; --info-border:
+rgba(133,183,235,0.3);
+--warn-bg: #412402; --warn-text: #fac775;
+--success-bg: #173404; --success-text: #97c459;
+--danger-bg: #501313; --danger-text: #f09595;
+--border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18);
+}
+}
+body { font-family: var(--font); background: var(--bg); color:
+var(--text); min-height: 100vh; padding-bottom: 90px; }
+.topbar { background: var(--surface); border-bottom: 0.5px solid
+var(--border); padding: 16px 20px 12px; position: sticky; top: 0;
+z-index: 10; display: flex; justify-content: space-between; align-items:
+center; }
+.topbar h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px;
+}
+.topbar h1 span { color: var(--text2); font-weight: 400; }
+.sync-status { font-size: 12px; color: var(--text3); }
+.sync-status.syncing { color: var(--info-text); }
+.sync-status.synced { color: var(--success-text); }
+.sync-status.error { color: var(--danger-text); }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background:
+var(--surface); border-top: 0.5px solid var(--border); display: flex;
+z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items:
+center; padding: 10px 0 8px; cursor: pointer; background: none; border:
+none; font-family: var(--font); color: var(--text3); font-size: 11px;
+gap: 4px; }
+.nav-item.active { color: var(--info-text); }
+.nav-icon { font-size: 22px; line-height: 1; }
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+/* Setup banner */
+.setup-banner { background: var(--warn-bg); border: 0.5px solid
+rgba(133,79,11,0.3); border-radius: var(--radius); padding: 14px 16px;
+margin-bottom: 16px; }
+.setup-banner p { font-size: 13px; color: var(--warn-text); line-height:
+1.5; margin-bottom: 10px; }
+.setup-row { display: flex; gap: 8px; }
+.setup-row input { flex: 1; font-size: 13px; padding: 8px 10px; border:
+0.5px solid rgba(133,79,11,0.4); border-radius: var(--radius-sm);
+background: var(--surface); color: var(--text); font-family:
+var(--font); }
+.camera-hero { background: var(--surface); border-radius: var(--radius);
+border: 0.5px solid var(--border); padding: 20px; margin-bottom: 16px;
+text-align: center; }
+.camera-btn { width: 80px; height: 80px; border-radius: 50%; background:
+var(--info-bg); border: 2px solid var(--info-border); display: flex;
+align-items: center; justify-content: center; cursor: pointer; margin: 0
+auto 12px; transition: transform 0.1s; }
+.camera-btn:active { transform: scale(0.94); }
+.camera-btn svg { width: 36px; height: 36px; }
+.camera-btn-label { font-size: 15px; font-weight: 500; color:
+var(--info-text); margin-bottom: 4px; }
+.camera-btn-sub { font-size: 13px; color: var(--text2); }
+input[type=file].camera-input { display: none; }
+.or-row { display: flex; align-items: center; gap: 10px; margin: 14px 0;
+}
+.or-line { flex: 1; height: 0.5px; background: var(--border2); }
+.or-text { font-size: 12px; color: var(--text3); }
+.drive-row { display: flex; gap: 8px; }
+.drive-row input { flex: 1; font-size: 14px; padding: 9px 12px; border:
+0.5px solid var(--border2); border-radius: var(--radius-sm); background:
+var(--surface); color: var(--text); font-family: var(--font); }
+.scan-status { margin-top: 12px; font-size: 13px; padding: 10px 14px;
+border-radius: var(--radius-sm); display: none; }
+.scan-status.loading { background: var(--info-bg); color:
+var(--info-text); }
+.scan-status.success { background: var(--success-bg); color:
+var(--success-text); }
+.scan-status.error { background: var(--danger-bg); color:
+var(--danger-text); }
+.preview-wrap { margin-top: 14px; display: none; }
+.preview-wrap img { width: 100%; max-height: 220px; object-fit: cover;
+border-radius: var(--radius-sm); }
+.preview-actions { display: flex; gap: 8px; margin-top: 10px; }
+.form-card { background: var(--surface); border-radius: var(--radius);
+border: 0.5px solid var(--border); padding: 16px; margin-bottom: 16px; }
+.form-title { font-size: 13px; font-weight: 500; color: var(--text2);
+text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;
+}
+.field { margin-bottom: 12px; }
+.field label { font-size: 13px; color: var(--text2); display: block;
+margin-bottom: 5px; }
+.field input, .field select { width: 100%; padding: 11px 13px; border:
+0.5px solid var(--border2); border-radius: var(--radius-sm); background:
+var(--surface); color: var(--text); font-size: 16px; font-family:
+var(--font); -webkit-appearance: none; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+margin-bottom: 12px; }
+.btn { padding: 12px 20px; border-radius: var(--radius-sm); border:
+0.5px solid var(--border2); background: var(--surface2); color:
+var(--text); cursor: pointer; font-size: 15px; font-weight: 500;
+font-family: var(--font); text-align: center; }
+.btn-primary { background: var(--info-bg); color: var(--info-text);
+border-color: var(--info-border); }
+.btn-full { width: 100%; display: block; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+.btn:active { opacity: 0.75; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.budget-group { background: var(--surface); border-radius:
+var(--radius); border: 0.5px solid var(--border); padding: 16px;
+margin-bottom: 12px; }
+.budget-group-title { font-size: 13px; font-weight: 600; color:
+var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
+margin-bottom: 14px; }
+.budget-item { margin-bottom: 14px; }
+.budget-item:last-child { margin-bottom: 0; }
+.budget-row { display: flex; justify-content: space-between;
+align-items: baseline; margin-bottom: 5px; }
+.budget-label { font-size: 14px; }
+.budget-amounts { font-size: 13px; color: var(--text2); }
+.budget-amounts strong { color: var(--text); font-weight: 600; }
+.bar-track { height: 8px; background: var(--surface2); border-radius:
+4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s
+ease; }
+.bar-ok { background: #1D9E75; } .bar-warn { background: #EF9F27; }
+.bar-over { background: #E24B4A; }
+.budget-status { font-size: 12px; margin-top: 4px; }
+.status-ok { color: var(--success-text); } .status-warn { color:
+var(--warn-text); } .status-over { color: var(--danger-text); }
+.expense-list { display: flex; flex-direction: column; gap: 10px; }
+.expense-item { background: var(--surface); border: 0.5px solid
+var(--border); border-radius: var(--radius); padding: 12px 14px;
+display: flex; align-items: center; justify-content: space-between; gap:
+10px; }
+.expense-left { display: flex; align-items: center; gap: 10px; flex: 1;
+min-width: 0; }
+.cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink:
+0; }
+.dot-expenses { background: #EF9F27; } .dot-spending { background:
+#1D9E75; }
+.expense-info { min-width: 0; }
+.expense-desc { font-size: 14px; font-weight: 500; white-space: nowrap;
+overflow: hidden; text-overflow: ellipsis; }
+.expense-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.expense-right { display: flex; align-items: center; gap: 10px;
+flex-shrink: 0; }
+.expense-amount { font-size: 15px; font-weight: 600; }
+.expense-del { background: none; border: none; color: var(--text3);
+cursor: pointer; font-size: 20px; padding: 0; line-height: 1; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+margin-bottom: 16px; }
+.metric { background: var(--surface); border-radius: var(--radius);
+border: 0.5px solid var(--border); padding: 14px; }
+.metric-label { font-size: 12px; color: var(--text2); margin-bottom:
+4px; }
+.metric-value { font-size: 20px; font-weight: 600; }
+.metric-value.over { color: var(--danger-text); } .metric-value.ok {
+color: var(--success-text); }
+.section-header { font-size: 13px; font-weight: 500; color:
+var(--text2); text-transform: uppercase; letter-spacing: 0.05em;
+margin-bottom: 10px; }
+.period-row { display: flex; align-items: center; gap: 10px;
+margin-bottom: 16px; flex-wrap: wrap; }
+.period-row label { font-size: 13px; color: var(--text2); }
+.period-row select { -webkit-appearance: none; padding: 7px 12px;
+border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+background: var(--surface); color: var(--text); font-size: 14px;
+font-family: var(--font); }
+.empty { color: var(--text3); font-size: 14px; text-align: center;
+padding: 2.5rem 0; }
+@media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+<h1>J&E Expenses <span>— April 2026</span></h1>
+<span id="sync-status" class="sync-status"></span>
+</div>
+<!-- LOG TAB -->
+<div id="tab-log" class="tab-content active">
+<!-- Setup banner — hidden since Web App URL is configured -->
+<div class="setup-banner" id="setup-banner" style="display:none">
+<p>Paste your Google Apps Script Web App URL below to sync expenses to
+your Google Sheet automatically.</p>
+<div class="setup-row">
+<input type="text" id="webapp-url-input"
+placeholder="https://script.google.com/macros/s/...">
+<button class="btn btn-sm btn-primary"
+onclick="saveWebAppUrl()">Save</button>
+</div>
+</div>
+<div class="camera-hero">
+<div class="camera-btn"
+onclick="document.getElementById('camera-input').click()">
+<svg viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="1.8"
+stroke-linecap="round" stroke-linejoin="round">
+<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2
+3h4a2 2 0 0 1 2 2z"/>
+<circle cx="12" cy="13" r="4"/>
+</svg>
+</div>
+<input type="file" id="camera-input" class="camera-input"
+accept="image/*" capture="environment" onchange="handleCamera(event)">
+<div class="camera-btn-label">Scan a receipt</div>
+<div class="camera-btn-sub">Tap to open your camera</div>
+<div class="or-row"><div class="or-line"></div><div class="or-text">or
+upload from photos</div><div class="or-line"></div></div>
+<button class="btn btn-sm"
+onclick="document.getElementById('gallery-input').click()">Choose from
+library</button>
+<input type="file" id="gallery-input" class="camera-input"
+accept="image/*" onchange="handleCamera(event)">
+<div class="or-row"><div class="or-line"></div><div class="or-text">or
+paste a Google Drive link</div><div class="or-line"></div></div>
+<div class="drive-row">
+<input type="text" id="drive-url"
+placeholder="https://drive.google.com/file/d/...">
+<button class="btn btn-sm btn-primary"
+onclick="scanDriveLink()">Scan</button>
+</div>
+<p style="font-size:12px;color:var(--text3);margin-top:6px">File must be
+shared as "Anyone with the link"</p>
+<div id="scan-status" class="scan-status"></div>
+<div class="preview-wrap" id="preview-wrap">
+<img id="preview-img" src="" alt="Receipt preview">
+<div class="preview-actions">
+<a id="save-btn" class="btn btn-sm" download="receipt.jpg">Save to
+Files</a>
+<button class="btn btn-sm btn-primary" onclick="scanUpload()">Scan
+receipt</button>
+</div>
+</div>
+</div>
+<div class="form-card">
+<div class="form-title">Add expense</div>
+<div class="field-row">
+<div class="field" style="margin:0"><label>Date</label><input
+type="date" id="exp-date"></div>
+<div class="field" style="margin:0"><label>Amount ($)</label><input
+type="number" id="exp-amount" placeholder="0.00" inputmode="decimal"
+step="0.01"></div>
+</div>
+<div class="field" style="margin-top:12px">
+<label>Category</label>
+<select id="exp-cat" onchange="updateSubcats()">
+<option value="expenses">Expenses</option>
+<option value="spending">Spending</option>
+</select>
+</div>
+<div class="field">
+<label>Subcategory</label>
+<select id="exp-subcat"></select>
+</div>
+<div class="field-row" style="margin-top:0">
+<div class="field" style="margin:0"><label>Who</label>
+<select id="exp-who">
+<option value="shared">Shared</option>
+<option value="jese">Jese</option>
+<option value="edlene">Edlene</option>
+</select>
+</div>
+<div class="field" style="margin:0"><label>Note (optional)</label>
+<input type="text" id="exp-note" placeholder="e.g. Woolworths">
+</div>
+</div>
+<button class="btn btn-primary btn-full" id="add-btn"
+style="margin-top:4px" onclick="addExpense()">Add expense</button>
+</div>
+<div class="section-header">Recent entries</div>
+<div id="entries" class="expense-list"></div>
+</div>
+<!-- BUDGET TAB -->
+<div id="tab-budget" class="tab-content">
+<div class="period-row">
+<label>Period:</label>
+<select id="budget-period" onchange="renderBudget()">
+<option value="this-fortnight">This fortnight</option>
+<option value="last-fortnight">Last fortnight</option>
+<option value="all">All time</option>
+</select>
+</div>
+<div class="metric-grid" id="budget-metrics"></div>
+<div id="budget-bars"></div>
+</div>
+<!-- HISTORY TAB -->
+<div id="tab-history" class="tab-content">
+<div class="period-row">
+<label>Period:</label>
+<select id="history-period" onchange="renderHistory()">
+<option value="this-fortnight">This fortnight</option>
+<option value="last-fortnight">Last fortnight</option>
+<option value="all">All time</option>
+</select>
+</div>
+<div id="history-list" class="expense-list"></div>
+</div>
+<nav class="bottom-nav">
+<button class="nav-item active" onclick="showTab('log')"
+id="nav-log"><span class="nav-icon">＋</span><span>Log</span></button>
+<button class="nav-item" onclick="showTab('budget')"
+id="nav-budget"><span
+class="nav-icon">◎</span><span>Budget</span></button>
+<button class="nav-item" onclick="showTab('history')"
+id="nav-history"><span
+class="nav-icon">≡</span><span>History</span></button>
+</nav>
+<script>
+// ── Config ─────────────────────────────────────────────────────
+const BUDGETS = {
+expenses: {
+'Groceries': 230,
+'Fuel': 180,
+'Date Night': 150,
+'J - Haircut': 55,
+'E - Nails/Lashes': 155,
+},
+spending: {
+'Birthdays & Blessings': 220,
+'J - Eating Out/Spending':170,
+'E - Eating Out/Spending':170,
+}
+};
+const SUBCATS = { expenses: Object.keys(BUDGETS.expenses), spending:
+Object.keys(BUDGETS.spending) };
+// ── State ──────────────────────────────────────────────────────
+let expenses = JSON.parse(localStorage.getItem('je_expenses_v3') ||
+'[]');
+let webAppUrl = localStorage.getItem('je_webapp_url') ||
+'https://script.google.com/macros/s/AKfycbwoopcHlmJM6mcEIjx8uqV3g8Bp15Feij4Y_Sy8t6Pscl4oynUqAohLnRSKI7Hwk75m/exec';
+let currentImageBase64 = null, currentImageMediaType = 'image/jpeg',
+currentObjectUrl = null;
+function save() { localStorage.setItem('je_expenses_v3',
+JSON.stringify(expenses)); }
+function fmt(n) { return '$' +
+Number(Math.abs(n)||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+// ── Web App URL setup ──────────────────────────────────────────
+function saveWebAppUrl() {
+const url = document.getElementById('webapp-url-input').value.trim();
+if (!url) return;
+webAppUrl = url;
+localStorage.setItem('je_webapp_url', url);
+document.getElementById('setup-banner').style.display = 'none';
+setSyncStatus('Connecting...', 'syncing');
+syncFromSheet();
+}
+function checkSetup() {
+if (webAppUrl) {
+document.getElementById('setup-banner').style.display = 'none';
+syncFromSheet();
+} else {
+document.getElementById('webapp-url-input').value = '';
+}
+}
+// ── Sync status ────────────────────────────────────────────────
+function setSyncStatus(msg, type) {
+const el = document.getElementById('sync-status');
+el.textContent = msg;
+el.className = 'sync-status' + (type ? ' '+type : '');
+}
+// ── Sync FROM Google Sheet on load ─────────────────────────────
+async function syncFromSheet() {
+if (!webAppUrl) return;
+setSyncStatus('Syncing...', 'syncing');
+try {
+const res = await fetch(webAppUrl, { method: 'GET' });
+const data = await res.json();
+if (data.expenses && data.expenses.length > 0) {
+// Merge: sheet is source of truth, keep local entries not yet in sheet
+const sheetIds = new Set(data.expenses.map(e => String(e.id)));
+const localOnly = expenses.filter(e => !sheetIds.has(String(e.id)));
+expenses = [...data.expenses.map(e => ({...e, amount:
+parseFloat(e.amount)||0})), ...localOnly];
+expenses.sort((a,b) => new Date(b.date) - new Date(a.date));
+save();
+}
+setSyncStatus('Synced', 'synced');
+setTimeout(() => setSyncStatus('',''), 3000);
+renderEntries();
+} catch(err) {
+setSyncStatus('Sync failed', 'error');
+}
+}
+// ── Sync TO Google Sheet ───────────────────────────────────────
+async function syncToSheet(expense) {
+if (!webAppUrl) return;
+setSyncStatus('Saving...', 'syncing');
+try {
+await fetch(webAppUrl, {
+method: 'POST',
+body: JSON.stringify({ action: 'add', ...expense }),
+});
+setSyncStatus('Saved to Sheet', 'synced');
+setTimeout(() => setSyncStatus('',''), 3000);
+} catch(err) {
+setSyncStatus('Sheet sync failed', 'error');
+}
+}
+async function deleteFromSheet(id) {
+if (!webAppUrl) return;
+try {
+await fetch(webAppUrl, {
+method: 'POST',
+body: JSON.stringify({ action: 'delete', id }),
+});
+} catch(err) { /* silent */ }
+}
+// ── UI helpers ─────────────────────────────────────────────────
+document.getElementById('exp-date').value = new
+Date().toISOString().split('T')[0];
+function updateSubcats() {
+const cat = document.getElementById('exp-cat').value;
+const sel = document.getElementById('exp-subcat');
+sel.innerHTML = SUBCATS[cat].map(s=>`<option>${s}</option>`).join('');
+}
+updateSubcats();
+function showTab(t) {
+document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+document.getElementById('tab-'+t).classList.add('active');
+document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+document.getElementById('nav-'+t).classList.add('active');
+if(t==='budget') renderBudget();
+if(t==='history') renderHistory();
+}
+function setStatus(msg,type) {
+const el=document.getElementById('scan-status');
+el.textContent=msg; el.className='scan-status'+(type?' '+type:'');
+el.style.display=msg?'block':'none';
+}
+// ── Camera / file handling ─────────────────────────────────────
+function handleCamera(e) {
+const file=e.target.files[0]; if(!file) return;
+currentImageMediaType=file.type||'image/jpeg';
+if(currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+currentObjectUrl=URL.createObjectURL(file);
+document.getElementById('preview-img').src=currentObjectUrl;
+document.getElementById('save-btn').href=currentObjectUrl;
+document.getElementById('save-btn').download=file.name||'receipt.jpg';
+document.getElementById('preview-wrap').style.display='block';
+setStatus('','');
+const reader=new FileReader();
+reader.onload=ev=>{currentImageBase64=ev.target.result.split(',')[1];};
+reader.readAsDataURL(file);
+}
+function driveDirectUrl(url) {
+const m=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+return m?'https://drive.google.com/uc?export=download&id='+m[1]:null;
+}
+async function fetchImageAsBase64(url) {
+const res=await fetch(url);
+if(!res.ok) throw new Error('Could not fetch image.');
+const blob=await res.blob();
+currentImageMediaType=blob.type||'image/jpeg';
+if(currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+currentObjectUrl=URL.createObjectURL(blob);
+document.getElementById('preview-img').src=currentObjectUrl;
+document.getElementById('save-btn').href=currentObjectUrl;
+document.getElementById('preview-wrap').style.display='block';
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=e=>resolve(e.target.result.split(',')[1]);
+reader.onerror=reject; reader.readAsDataURL(blob);
+});
+}
+async function scanDriveLink() {
+const url=document.getElementById('drive-url').value.trim();
+if(!url){setStatus('Please paste a Google Drive link.','error');return;}
+const direct=driveDirectUrl(url);
+if(!direct){setStatus('Could not parse that link.','error');return;}
+setStatus('Fetching from Google Drive...','loading');
+try{ currentImageBase64=await fetchImageAsBase64(direct); setStatus('Got
+it — scanning...','loading'); await callClaudeVision(); }
+catch(err){ setStatus(err.message||'Failed.','error'); }
+}
+async function scanUpload() {
+if(!currentImageBase64){setStatus('No image loaded.','error');return;}
+setStatus('Scanning receipt...','loading');
+await callClaudeVision();
+}
+// ── Claude vision ──────────────────────────────────────────────
+async function callClaudeVision() {
+const allSubcats=[...SUBCATS.expenses,...SUBCATS.spending];
+const system=`You are a receipt scanner for an Australian couple's
+expense tracker. Extract details and respond ONLY with valid JSON, no
+markdown:
+{"amount":<total as number>,"date":"<YYYY-MM-DD, today if
+unclear>","note":"<merchant name max 40
+chars>","category":"<expenses|spending>","subcategory":"<best match
+from: ${allSubcats.join(', ')}>"}
+Rules: groceries/fuel/haircut/beauty/date night=expenses. Eating
+out/personal spending/gifts/blessings=spending.`;
+try {
+const res=await fetch('https://api.anthropic.com/v1/messages',{
+method:'POST', headers:{
+'Content-Type':'application/json',
+'x-api-key':
+'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',
+'anthropic-version': '2023-06-01',
+'anthropic-dangerous-allow-browser': 'true',
+},
+body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:200,
+system,
+messages:[{role:'user',content:[
+{type:'image',source:{type:'base64',media_type:currentImageMediaType,data:currentImageBase64}},
+{type:'text',text:'Scan this receipt and return JSON.'}
+]}]
+})
+});
+const data=await res.json();
+if(!res.ok) throw new Error(data.error?.message||'API error');
+const text=data.content.find(b=>b.type==='text')?.text||'';
+const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+if(parsed.amount)
+document.getElementById('exp-amount').value=parsed.amount;
+if(parsed.date) document.getElementById('exp-date').value=parsed.date;
+if(parsed.note) document.getElementById('exp-note').value=parsed.note;
+if(parsed.category){
+document.getElementById('exp-cat').value=parsed.category;
+updateSubcats(); }
+if(parsed.subcategory){ const sel=document.getElementById('exp-subcat');
+for(let o of
+sel.options){if(o.text===parsed.subcategory){sel.value=parsed.subcategory;break;}}
+}
+setStatus('Receipt scanned! Review the details then tap "Add
+expense".','success');
+} catch(err){ setStatus('Could not read receipt:
+'+(err.message||'Unknown error'),'error'); }
+}
+// ── Add / delete expense ───────────────────────────────────────
+async function addExpense() {
+const date=document.getElementById('exp-date').value;
+const amount=parseFloat(document.getElementById('exp-amount').value);
+const cat=document.getElementById('exp-cat').value;
+const subcat=document.getElementById('exp-subcat').value;
+const who=document.getElementById('exp-who').value;
+const note=document.getElementById('exp-note').value;
+if(!date||!amount||isNaN(amount)||amount<=0){alert('Please enter a date
+and amount.');return;}
+const btn=document.getElementById('add-btn');
+btn.disabled=true; btn.textContent='Saving...';
+const expense={id:Date.now(),date,amount,cat,subcat,who,note};
+expenses.unshift(expense); save();
+document.getElementById('exp-amount').value='';
+document.getElementById('exp-note').value='';
+document.getElementById('drive-url').value='';
+document.getElementById('preview-wrap').style.display='none';
+currentImageBase64=null; setStatus('','');
+renderEntries();
+await syncToSheet(expense);
+btn.disabled=false; btn.textContent='Add expense';
+}
+async function deleteExpense(id, cb) {
+expenses=expenses.filter(e=>e.id!==id); save();
+renderEntries(); if(cb) cb();
+await deleteFromSheet(id);
+}
+function renderEntries() {
+const el=document.getElementById('entries');
+const recent=expenses.slice(0,10);
+if(!recent.length){el.innerHTML='<div class="empty">No expenses yet —
+scan a receipt or add one manually</div>';return;}
+el.innerHTML=recent.map(e=>`
+<div class="expense-item">
+<div class="expense-left">
+<div class="cat-dot dot-${e.cat}"></div>
+<div class="expense-info">
+<div class="expense-desc">${e.subcat}${e.note?' · '+e.note:''}</div>
+<div class="expense-meta">${e.date} · ${e.who}</div>
+</div>
+</div>
+<div class="expense-right">
+<span class="expense-amount">${fmt(e.amount)}</span>
+<button class="expense-del" onclick="deleteExpense(${e.id})">×</button>
+</div>
+</div>`).join('');
+}
+// ── Period filtering ───────────────────────────────────────────
+function fortnight(offset) {
+const now=new Date(), diff=(now.getDay()+6)%7;
+const mon=new Date(now); mon.setDate(now.getDate()-diff+offset*14);
+mon.setHours(0,0,0,0);
+const end=new Date(mon); end.setDate(mon.getDate()+13);
+end.setHours(23,59,59,999);
+return {start:mon,end};
+}
+function filterByPeriod(list,period) {
+if(period==='all') return list;
+const {start,end}=period==='this-fortnight'?fortnight(0):fortnight(-1);
+return list.filter(e=>{const d=new Date(e.date);return
+d>=start&&d<=end;});
+}
+// ── Budget tab ─────────────────────────────────────────────────
+function renderBudget() {
+const period=document.getElementById('budget-period').value;
+const filtered=filterByPeriod(expenses,period);
+const
+totalBudget=Object.values({...BUDGETS.expenses,...BUDGETS.spending}).reduce((s,v)=>s+v,0);
+const totalSpent=filtered.reduce((s,e)=>s+e.amount,0);
+const remaining=totalBudget-totalSpent;
+document.getElementById('budget-metrics').innerHTML=`
+<div class="metric"><div class="metric-label">Budget</div><div
+class="metric-value">${fmt(totalBudget)}</div></div>
+<div class="metric"><div class="metric-label">Spent</div><div
+class="metric-value
+${totalSpent>totalBudget?'over':''}">${fmt(totalSpent)}</div></div>
+<div class="metric"><div
+class="metric-label">${remaining>=0?'Remaining':'Over by'}</div><div
+class="metric-value
+${remaining<0?'over':'ok'}">${fmt(remaining)}</div></div>
+<div class="metric"><div class="metric-label">Entries</div><div
+class="metric-value">${filtered.length}</div></div>`;
+const
+groups=[{title:'Expenses',cats:BUDGETS.expenses,cat:'expenses'},{title:'Spending',cats:BUDGETS.spending,cat:'spending'}];
+document.getElementById('budget-bars').innerHTML=groups.map(g=>`
+<div class="budget-group">
+<div class="budget-group-title">${g.title}</div>
+${Object.entries(g.cats).map(([label,budget])=>{
+const
+spent=filtered.filter(e=>e.cat===g.cat&&e.subcat===label).reduce((s,e)=>s+e.amount,0);
+const pct=Math.min(Math.round(spent/budget*100),100);
+const over=spent>budget, warn=!over&&pct>=80;
+const barClass=over?'bar-over':warn?'bar-warn':'bar-ok';
+const statusClass=over?'status-over':warn?'status-warn':'status-ok';
+const statusText=over?`${fmt(spent-budget)} over budget`:warn?`${pct}%
+used — nearing limit`:`${fmt(budget-spent)} remaining`;
+return `<div class="budget-item">
+<div class="budget-row"><span class="budget-label">${label}</span><span
+class="budget-amounts"><strong>${fmt(spent)}</strong> /
+${fmt(budget)}</span></div>
+<div class="bar-track"><div class="bar-fill ${barClass}"
+style="width:${pct}%"></div></div>
+<div class="budget-status ${statusClass}">${statusText}</div>
+</div>`;
+}).join('')}
+</div>`).join('');
+}
+// ── History tab ────────────────────────────────────────────────
+function renderHistory() {
+const period=document.getElementById('history-period').value;
+const filtered=filterByPeriod(expenses,period);
+const hl=document.getElementById('history-list');
+if(!filtered.length){hl.innerHTML='<div class="empty">No expenses for
+this period</div>';return;}
+hl.innerHTML=[...filtered].sort((a,b)=>new Date(b.date)-new
+Date(a.date)).map(e=>`
+<div class="expense-item">
+<div class="expense-left">
+<div class="cat-dot dot-${e.cat}"></div>
+<div class="expense-info">
+<div class="expense-desc">${e.subcat}${e.note?' · '+e.note:''}</div>
+<div class="expense-meta">${e.date} · ${e.who} · ${e.cat}</div>
+</div>
+</div>
+<div class="expense-right">
+<span class="expense-amount">${fmt(e.amount)}</span>
+<button class="expense-del"
+onclick="deleteExpense(${e.id},renderHistory)">×</button>
+</div>
+</div>`).join('');
+}
+// ── Init ───────────────────────────────────────────────────────
+checkSetup();
+renderEntries();
+</script>
+</body>
+</html>
