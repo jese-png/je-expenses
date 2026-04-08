@@ -219,8 +219,7 @@ input[type=file].camera-input { display: none; }
 </nav>
 
 <script>
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwoopcHlmJM6mcEIjx8uqV3g8Bp15Feij4Y_Sy8t6Pscl4oynUqAohLnRSKI7Hwk75m/exec';
-const ANTHROPIC_KEY = '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';
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxX88wTCXsTOjZ3k0S8f752AE9yvxLkph_dRViFI7OsdOhjCoCEgYRsTonFCDwbKs5_/exec';
 
 const BUDGETS = {
   expenses: {
@@ -341,34 +340,18 @@ async function scanUpload() {
 }
 
 async function callClaudeVision() {
-  const allSubcats = SUBCATS.expenses.concat(SUBCATS.spending);
-  const systemPrompt = 'You are a receipt scanner for an Australian couple\'s expense tracker. Extract details and respond ONLY with valid JSON, no markdown: {"amount":<total as number>,"date":"<YYYY-MM-DD, today if unclear>","note":"<merchant name max 40 chars>","category":"<expenses|spending>","subcategory":"<best match from: ' + allSubcats.join(', ') + '>"} Rules: groceries/fuel/haircut/beauty/date night=expenses. Eating out/personal spending/gifts/blessings=spending.';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(WEBAPP_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-allow-browser': 'true'
-      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: currentImageMediaType, data: currentImageBase64 } },
-            { type: 'text', text: 'Scan this receipt and return JSON.' }
-          ]
-        }]
+        action: 'scan',
+        mediaType: currentImageMediaType,
+        imageData: currentImageBase64
       })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ? data.error.message : 'API error');
-    const text = data.content.find(function(b) { return b.type === 'text'; });
-    const parsed = JSON.parse((text ? text.text : '').replace(/```json|```/g, '').trim());
+    if (!data.success) throw new Error(data.error || 'Scan failed');
+    const parsed = data.result;
     if (parsed.amount) document.getElementById('exp-amount').value = parsed.amount;
     if (parsed.date) document.getElementById('exp-date').value = parsed.date;
     if (parsed.note) document.getElementById('exp-note').value = parsed.note;
